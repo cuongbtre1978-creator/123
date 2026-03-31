@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kim Loại Kiềm Thổ Tác Dụng Với Nước</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* PHẦN 15. YÊU CẦU CSS CHI TIẾT */
+        :root {
+            --bg-dark: #0d0a1f;
+            --panel-bg: #1c153d;
+            --border: #3d2b7a;
+            --highlight: #00e5ff;
+            --highlight-hover: #00b3cc;
+            --text: #f0f0f0;
+            --text-muted: #a098c4;
+            --success: #00e676;
+            --danger: #ff1744;
+            --warning: #ffd600;
+            --cell-size: 40px;
+            --border-radius: 16px;
+            --box-shadow: 0 8px 32px rgba(0, 229, 255, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Scrollbar custom */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--highlight);
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes flipIn { from { transform: perspective(400px) rotateY(90deg); opacity: 0; } to { transform: perspective(400px) rotateY(0); opacity: 1; } }
+        @keyframes floatUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(-50px); opacity: 1; } }
+        @keyframes pulseScore { 0% { transform: scale(1); } 50% { transform: scale(1.2); color: var(--highlight); text-shadow: 0 0 10px var(--highlight); } 100% { transform: scale(1); } }
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .fadeIn { animation: fadeIn 0.5s ease forwards; }
+        .zoomIn { animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .pulseScore { animation: pulseScore 0.6s ease; }
+
+        /* General Layout */
+        .main-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            padding: 15px;
+            gap: 15px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Columns */
+        #left-col { width: 250px; flex-shrink: 0; display: flex; flex-direction: column; z-index: 10; }
+        #middle-col { flex-grow: 1; overflow-y: auto; position: relative; border-radius: var(--border-radius); }
+        #right-col { width: 250px; flex-shrink: 0; display: flex; flex-direction: column; z-index: 10; }
+
+        /* Screen Management */
+        .screen { display: none; height: 100%; animation: fadeIn 0.4s ease; padding: 20px; background: var(--panel-bg); border-radius: var(--border-radius); border: 1px solid var(--border); box-shadow: var(--box-shadow); overflow-y: auto; }
+        .screen.active { display: block; }
+        
+        /* Lab specific screen */
+        #screen-lab.active { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* Typography */
+        h1, h2, h3 { color: var(--highlight); margin-bottom: 15px; text-shadow: 0 0 5px rgba(0, 229, 255, 0.3); }
+        p { line-height: 1.6; margin-bottom: 10px; }
+        .text-warning { color: var(--warning); }
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--danger); }
+        .text-center { text-align: center; }
+
+        /* Overlay Đăng Nhập */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(13, 10, 31, 0.95);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(10px);
+        }
+        .login-box {
+            background: var(--panel-bg); border: 1px solid var(--highlight);
+            padding: 40px; border-radius: var(--border-radius);
+            text-align: center; max-width: 400px; width: 90%;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+        }
+        .atom-icon { font-size: 50px; color: var(--highlight); animation: spin 4s linear infinite; margin-bottom: 20px; }
+        .login-input {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+            color: var(--text); border-radius: 8px; font-size: 16px;
+            outline: none; transition: border-color 0.3s;
+        }
+        .login-input:focus { border-color: var(--highlight); }
+        .btn {
+            background: linear-gradient(45deg, #00b3cc, var(--highlight));
+            color: #000; border: none; padding: 12px 24px;
+            border-radius: 8px; font-weight: bold; font-size: 16px;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-block; width: 100%;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,229,255,0.4); }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* Menu Cột Trái */
+        .menu-title { text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px; }
+        .menu-btn {
+            display: flex; align-items: center; padding: 12px 15px;
+            margin-bottom: 10px; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s; background: rgba(0,0,0,0.2); border: 1px solid transparent;
+        }
+        .menu-btn i { width: 30px; font-size: 18px; color: var(--highlight); }
+        .menu-btn:hover { background: rgba(0, 229, 255, 0.1); border-color: var(--border); }
+        .menu-btn.active { background: linear-gradient(90deg, rgba(0, 229, 255, 0.2), transparent); border-left: 4px solid var(--highlight); }
+
+        /* Audio Player Custom */
+        .audio-player-custom {
+            display: flex; align-items: center; background: rgba(0,0,0,0.3);
+            padding: 10px 15px; border-radius: 30px; border: 1px solid var(--border);
+            margin-bottom: 20px; width: fit-content;
+        }
+        .audio-player-custom i { color: var(--success); margin-right: 10px; font-size: 20px; }
+        .audio-player-custom .small-text { font-size: 12px; color: var(--text-muted); display: block; }
+
+        /* Intro Screen */
+        .intro-content { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+        .intro-title { font-size: 36px; color: var(--warning); text-shadow: 0 0 15px rgba(255, 214, 0, 0.5); margin-bottom: 10px; }
+        .intro-atom { font-size: 100px; color: var(--highlight); animation: spin 8s linear infinite; margin: 40px 0; }
+
+        /* Crossword */
+        .crossword-container { margin: 20px 0; display: flex; flex-direction: column; align-items: center; }
+        .cw-row { display: flex; margin-bottom: 5px; position: relative; }
+        .row-num-btn {
+            width: 30px; height: var(--cell-size); background: var(--panel-bg);
+            border: 1px solid var(--border); border-radius: 4px; color: var(--text);
+            display: flex; justify-content: center; align-items: center;
+            margin-right: 10px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .row-num-btn:hover { background: var(--highlight); color: #000; }
+        .row-num-btn.done { background: var(--success); color: #000; border-color: var(--success); }
+        .cw-cells { display: flex; gap: 2px; }
+        .cw-cell {
+            width: var(--cell-size); height: var(--cell-size);
+            background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 20px; font-weight: bold; text-transform: uppercase;
+        }
+        .cw-cell.key-col { background: rgba(255, 214, 0, 0.1); border-color: var(--warning); }
+        .cw-cell.solved { background: rgba(0, 230, 118, 0.2); border-color: var(--success); color: var(--success); animation: flipIn 0.5s; }
+        .cw-cell.key-col.key-solved { background: rgba(255, 214, 0, 0.4); color: var(--warning); text-shadow: 0 0 5px var(--warning); }
+        
+        .cw-input-area {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;
+            border: 1px dashed var(--highlight); margin-top: 20px; display: none; width: 100%; max-width: 500px;
+        }
+        .cw-hint { font-style: italic; margin-bottom: 10px; color: var(--highlight); }
+        .cw-input-group { display: flex; gap: 10px; }
+        .cw-input-group input { flex-grow: 1; text-transform: uppercase; }
+
+        .keyword-guess-area { margin-top: 30px; text-align: center; display: none; }
+        .keyword-reveal { display: none; font-size: 24px; font-weight: bold; color: var(--warning); margin-top: 20px; padding: 15px; border: 2px dashed var(--warning); border-radius: 10px; background: rgba(255,214,0,0.1); letter-spacing: 5px;}
+
+        /* Quiz UI */
+        .quiz-card { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .quiz-card h3 { font-size: 18px; margin-bottom: 15px; color: var(--highlight); }
+        
+        .fill-blank-input { background: transparent; border: none; border-bottom: 2px solid var(--highlight); color: var(--warning); font-size: 18px; width: 150px; text-align: center; outline: none; padding: 5px; }
+        
+        .drop-zone { min-height: 40px; min-width: 100px; border: 2px dashed var(--text-muted); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; padding: 5px 15px; margin: 0 10px; vertical-align: middle; background: rgba(0,0,0,0.2); transition: 0.3s; }
+        .drop-zone.drag-over { border-color: var(--highlight); background: rgba(0,229,255,0.1); }
+        
+        .drag-items-container { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .draggable-item { background: var(--panel-bg); border: 1px solid var(--highlight); padding: 8px 15px; border-radius: 20px; cursor: grab; user-select: none; font-weight: bold; touch-action: none; z-index: 100;}
+        .draggable-item:active { cursor: grabbing; }
+        
+        .option-row { padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; background: rgba(0,0,0,0.2); }
+        .option-row:hover { border-color: var(--highlight); background: rgba(0,229,255,0.05); }
+        .option-row.selected { border-color: var(--highlight); background: rgba(0,229,255,0.2); }
+
+        .sort-container { display: flex; flex-direction: column; gap: 10px; max-width: 300px; }
+        .sortable-item { background: var(--panel-bg); border: 1px solid var(--text-muted); padding: 10px 15px; border-radius: 8px; cursor: grab; display: flex; justify-content: space-between; align-items: center; touch-action: none; z-index: 100; }
+        .sortable-item.dragging { opacity: 0.5; border-color: var(--highlight); }
+        
+        .tf-container { display: flex; gap: 20px; }
+        .tf-btn { flex: 1; padding: 15px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); font-weight: bold; cursor: pointer; transition: 0.3s; text-align: center;}
+        .tf-btn.selected { border-color: var(--highlight); background: rgba(0,229,255,0.2); }
+
+        .feedback-msg { margin-top: 10px; padding: 10px; border-radius: 5px; display: none; font-weight: bold; }
+        .feedback-msg.correct { background: rgba(0,230,118,0.1); color: var(--success); border-left: 4px solid var(--success); display: block; animation: fadeIn 0.3s;}
+        .feedback-msg.incorrect { background: rgba(255,23,68,0.1); color: var(--danger); border-left: 4px solid var(--danger); display: block; animation: fadeIn 0.3s;}
+
+        /* Lab Menu Floating */
+        .lab-floating-menu {
+            position: absolute; top: 10px; left: 10px; z-index: 100;
+        }
+        .lab-menu-btn { background: var(--panel-bg); border: 1px solid var(--highlight); color: var(--text); padding: 10px; border-radius: 8px; cursor: pointer; }
+        .lab-menu-dropdown {
+            position: absolute; top: 45px; left: 0; background: var(--panel-bg);
+            border: 1px solid var(--border); border-radius: 8px; display: none;
+            flex-direction: column; min-width: 150px; overflow: hidden; box-shadow: var(--box-shadow);
+        }
+        .lab-menu-dropdown.show { display: flex; animation: fadeIn 0.2s; }
+        .lab-menu-dropdown .menu-btn { margin: 0; border-radius: 0; border: none; border-bottom: 1px solid var(--border); }
+
+        .lab-instruction {
+            position: absolute; top: 10px; right: 10px; background: rgba(28, 21, 61, 0.95);
+            border: 1px solid var(--highlight); padding: 15px; border-radius: 10px;
+            width: 300px; z-index: 100; box-shadow: var(--box-shadow); animation: slideInRight 0.5s;
+        }
+        .lab-instruction h3 { font-size: 16px; margin-bottom: 5px; }
+        .lab-instruction ul { margin-left: 20px; margin-bottom: 10px; font-size: 14px; }
+        
+        .lab-iframe-container { width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: var(--border-radius); background: #fff;}
+        .lab-iframe-container iframe {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
+        }
+
+        /* Summary Mindmap */
+        .mindmap-img { max-width: 100%; width: 800px; border-radius: 16px; border: 2px solid var(--highlight); box-shadow: 0 0 20px rgba(0,229,255,0.2); display: block; margin: 0 auto; }
+
+        /* Extensions */
+        .extend-block { background: rgba(0,0,0,0.2); border-left: 4px solid var(--warning); padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
+        .extend-block h3 { color: var(--warning); font-size: 16px; }
+
+        /* Modals & Popups */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal.active { display: flex; animation: fadeIn 0.3s; }
+        .modal-content {
+            background: var(--panel-bg); border: 1px solid var(--highlight); border-radius: var(--border-radius);
+            width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 25px;
+            position: relative; box-shadow: var(--box-shadow);
+        }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; color: var(--text-muted); cursor: pointer; background: none; border: none;}
+        .close-btn:hover { color: var(--danger); }
+
+        .reward-popup, .score-popup { text-align: center; }
+        .reward-popup img { max-width: 150px; border-radius: 10px; margin: 15px 0; border: 2px solid var(--warning);}
+        .big-score { font-size: 60px; font-weight: bold; color: var(--highlight); margin: 20px 0; text-shadow: 0 0 20px rgba(0,229,255,0.5); }
+
+        /* Info Column */
+        .info-panel { text-align: center; margin-bottom: 20px; }
+        .info-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .info-value { font-size: 18px; font-weight: bold; color: var(--highlight); margin-bottom: 10px; }
+        .total-score-display { font-size: 48px; font-weight: bold; color: var(--warning); text-shadow: 0 0 15px rgba(255,214,0,0.4); margin: 10px 0; }
+        .rankBadge { display: inline-block; padding: 5px 15px; background: rgba(255,255,255,0.1); border-radius: 20px; font-size: 14px; border: 1px solid var(--border); margin-bottom: 20px; }
+
+        /* AI Assistant */
+        .ai-fab {
+            position: fixed; bottom: 30px; right: 30px; background: linear-gradient(135deg, #6200ea, #b388ff);
+            color: #fff; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(98,0,234,0.4); z-index: 1000;
+            transition: 0.3s; border: none;
+        }
+        .ai-fab:hover { transform: scale(1.1); }
+        .ai-fab::after { content: "✨ Hỏi Trợ Giảng AI"; position: absolute; right: 70px; background: #fff; color: #000; font-size: 14px; padding: 5px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none; opacity: 0; transition: 0.3s; font-weight: bold; }
+        .ai-fab:hover::after { opacity: 1; }
+        
+        .ai-chat-window {
+            position: fixed; bottom: 100px; right: 30px; width: 350px; height: 450px;
+            background: var(--panel-bg); border: 1px solid var(--border); border-radius: 16px;
+            display: none; flex-direction: column; box-shadow: var(--box-shadow); z-index: 1000; overflow: hidden;
+        }
+        .ai-chat-window.active { display: flex; animation: zoomIn 0.3s; }
+        .ai-header { background: linear-gradient(90deg, #311b92, #6200ea); padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .ai-body { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.2); }
+        .ai-msg { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; }
+        .msg-ai { background: rgba(98,0,234,0.2); border: 1px solid #6200ea; align-self: flex-start; border-bottom-left-radius: 0; }
+        .msg-user { background: rgba(0,229,255,0.2); border: 1px solid var(--highlight); align-self: flex-end; border-bottom-right-radius: 0; }
+        .ai-footer { padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 5px; }
+        .ai-input { flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 20px; outline: none; }
+        .ai-send-btn { background: #6200ea; color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+
+        /* Floating Points */
+        .floating-point { position: fixed; color: var(--warning); font-size: 24px; font-weight: bold; text-shadow: 0 0 10px rgba(255,214,0,0.8); pointer-events: none; z-index: 9999; animation: floatUp 1.5s ease forwards; }
+
+        /* Fireworks container */
+        #fireworks-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9998; }
+        .particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; opacity: 1; }
+
+        .dots::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
+        @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } 100% { content: ''; } }
+
+        /* Responsive Mobile <= 850px */
+        @media (max-width: 850px) {
+            body { height: auto; display: block; overflow-y: auto; }
+            .main-container { flex-direction: column; height: auto; padding: 10px; overflow: visible; }
+            #left-col, #right-col { width: 100%; }
+            #middle-col { height: auto; min-height: 80vh; overflow: visible; }
+            #screen-lab.active { height: 90vh; }
+            
+            .lab-iframe-container iframe {
+                /* Crop iframe cho mobile */
+                top: -60px; width: 120%; height: calc(100% + 60px); right: 0; left: auto;
+            }
+            .cw-input-group { flex-direction: column; }
+            .ai-chat-window { width: calc(100% - 40px); right: 20px; bottom: 90px; }
+            .lab-instruction { width: calc(100% - 20px); top: 50px; right: 10px; }
+            
+            #left-col .panel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+            .menu-title { grid-column: 1 / -1; margin-bottom: 5px; padding-bottom: 5px; }
+            .menu-btn { margin-bottom: 0; justify-content: center; flex-direction: column; text-align: center; font-size: 12px; padding: 8px;}
+            .menu-btn i { margin-right: 0; margin-bottom: 5px; }
+            .menu-btn.active { border-left: none; border-bottom: 3px solid var(--highlight); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🔴 CHÈN AUDIO: Preload -->
+    <audio id="audio-tingting" src="tingting.mp3"></audio>
+    <audio id="audio-sai_roi" src="sai_roi.mp3"></audio>
+    <audio id="audio-giong_dung" src="giong_dung.mp3"></audio>
+    <audio id="audio-giong_sai" src="giong_sai.mp3"></audio>
+    <audio id="audio-gioi_thieu" src="gioi_thieu.mp3"></audio>
+    <audio id="audio-khoi_dong" src="khoi_dong.mp3"></audio>
+    <audio id="audio-chot_khoi_dong" src="chot_khoi_dong.mp3"></audio>
+    <audio id="audio-thi_nghiem_ao" src="thi_nghiem_ao.mp3"></audio>
+    <audio id="audio-luyen_tap" src="luyen_tap.mp3"></audio>
+    <audio id="audio-chot_luyen_tap" src="chot_luyen_tap.mp3"></audio>
+    <audio id="audio-cung_co" src="củng cố.mp3"></audio>
+    <audio id="audio-mo_rong" src="mo_rong.mp3"></audio>
+    <audio id="audio-chao_tam_biet" src="chao_tam_biet.mp3"></audio>
+
+    <!-- PHẦN 1. OVERLAY ĐĂNG NHẬP -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <i class="fas fa-atom atom-icon"></i>
+            <h2 style="color: #fff;">LỚP HỌC E-LEARNING<br>THẦY LÊ NGUYỄN CƯỜNG</h2>
+            <p class="text-warning" style="margin-bottom: 25px;">Bài giảng E-Learning<br>Kim Loại Kiềm Thổ Tác Dụng Với Nước</p>
+            <input type="text" id="login-name" class="login-input" placeholder="Họ và tên của em...">
+            <input type="text" id="login-class" class="login-input" placeholder="Lớp (VD: 12A1)...">
+            <button class="btn" onclick="startApp()">BẮT ĐẦU VÀO HỌC</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- PHẦN 2. MENU CỘT TRÁI -->
+        <div id="left-col">
+            <div class="panel" style="flex-grow: 1;">
+                <h3 class="menu-title">MENU</h3>
+                <div class="menu-btn active" onclick="switchScreen('intro')" id="nav-intro"><i class="fas fa-home"></i> Giới thiệu</div>
+                <div class="menu-btn" onclick="switchScreen('warmup')" id="nav-warmup"><i class="fas fa-puzzle-piece"></i> Khởi động</div>
+                <div class="menu-btn" onclick="switchScreen('lab')" id="nav-lab"><i class="fas fa-flask"></i> Thí nghiệm ảo</div>
+                <div class="menu-btn" onclick="switchScreen('quiz')" id="nav-quiz"><i class="fas fa-graduation-cap"></i> Luyện tập</div>
+                <div class="menu-btn" onclick="switchScreen('summary')" id="nav-summary"><i class="fas fa-sitemap"></i> Củng cố</div>
+                <div class="menu-btn" onclick="switchScreen('extend')" id="nav-extend"><i class="fas fa-book-open"></i> Mở rộng</div>
+            </div>
+        </div>
+
+        <!-- CỘT GIỮA: NỘI DUNG -->
+        <div id="middle-col">
+            <!-- PHẦN 3. MÀN HÌNH GIỚI THIỆU -->
+            <div id="screen-intro" class="screen active">
+                <div class="intro-content">
+                    <h1 class="intro-title">KIM LOẠI KIỀM THỔ<br>TÁC DỤNG VỚI NƯỚC</h1>
+                    <p>Bài giảng E-Learning tích hợp thí nghiệm mô phỏng.</p>
+                    <i class="fas fa-atom intro-atom"></i>
+                    <button class="btn" style="width: auto;" onclick="switchScreen('warmup')">Bắt đầu Khởi động</button>
+                </div>
+            </div>
+
+            <!-- PHẦN 4. MÀN HÌNH KHỞI ĐỘNG -->
+            <div id="screen-warmup" class="screen">
+                <h2>KHỞI ĐỘNG: BÍ ẨN HÓA HỌC</h2>
+                <div class="audio-player-custom">
+                    <i class="fas fa-volume-up"></i>
+                    <div>
+                        <strong>Lời dẫn từ Thầy Cường</strong>
+                        <span class="small-text">Đang phát âm thanh...</span>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <p class="text-warning text-center" style="font-size: 18px;"><strong>Tìm từ khóa hàng dọc màu vàng gồm 6 chữ cái.</strong></p>
+                    <div id="crossword-board" class="crossword-container">
+                        <!-- Crossword generated by JS -->
+                    </div>
+
+                    <div id="cw-input-area" class="cw-input-area">
+                        <p id="cw-hint" class="cw-hint"></p>
+                        <div class="cw-input-group">
+                            <input type="text" id="cw-answer-input" class="login-input" style="margin:0;" placeholder="Nhập đáp án (không dấu)..." onkeypress="if(event.key==='Enter') checkRow()">
+                            <button class="btn" style="width: auto;" onclick="checkRow()">Kiểm tra</button>
+                        </div>
+                    </div>
+
+                    <div id="keyword-guess-area" class="keyword-guess-area">
+                        <button class="btn" style="background: linear-gradient(45deg, #ff9100, #ffd600);" onclick="showVerticalInput()">Đoán luôn từ khóa hàng dọc</button>
+                    </div>
+                    <div id="keyword-reveal" class="keyword-reveal"></div>
+                </div>
+            </div>
+
+            <!-- PHẦN 5. MÀN HÌNH THÍ NGHIỆM ẢO -->
+            <div id="screen-lab" class="screen">
+                <!-- Floating Menu -->
+                <div class="lab-floating-menu">
+                    <button class="lab-menu-btn" onclick="toggleLabMenu()"><i class="fas fa-bars"></i> Menu</button>
+                    <div id="lab-dropdown" class="lab-menu-dropdown">
+                        <div class="menu-btn" onclick="switchScreen('intro')">Giới thiệu</div>
+                        <div class="menu-btn" onclick="switchScreen('warmup')">Khởi động</div>
+                        <div class="menu-btn active" onclick="switchScreen('lab')">TN ảo</div>
+                        <div class="menu-btn" onclick="switchScreen('quiz')">Luyện tập</div>
+                        <div class="menu-btn" onclick="switchScreen('summary')">Củng cố</div>
+                        <div class="menu-btn" onclick="switchScreen('extend')">Mở rộng</div>
+                    </div>
+                </div>
+
+                <!-- Hướng dẫn -->
+                <div id="lab-instruction" class="lab-instruction">
+                    <h3 class="text-warning"><i class="fas fa-info-circle"></i> Hướng dẫn</h3>
+                    <span class="small-text" style="color: var(--text-muted); display: block; margin-bottom: 10px;">Đang phát âm thanh hướng dẫn...</span>
+                    <ul>
+                        <li>Kích vào bình nước + phenolphtalein, quan sát màu.</li>
+                        <li>Kích vào kim loại tương ứng và quan sát.</li>
+                    </ul>
+                    <button class="btn" style="padding: 8px; font-size: 14px;" onclick="closeInstruction()">Đã hiểu (Tắt hướng dẫn)</button>
+                </div>
+
+                <!-- Iframe Mô phỏng -->
+                <div class="lab-iframe-container">
+                    <!-- 🔴 CHÈN LINK MÔ PHỎNG: https://cuongbtre1978-creator.github.io/ThinghiemaoIIA-nuoc/ -->
+                    <iframe src="https://cuongbtre1978-creator.github.io/ThinghiemaoIIA-nuoc/" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <!-- PHẦN 6. MÀN HÌNH LUYỆN TẬP -->
+            <div id="screen-quiz" class="screen">
+                <h2>LUYỆN TẬP CỦNG CỐ</h2>
+                <div class="audio-player-custom">
+                    <i class="fas fa-volume-up"></i>
+                    <div>
+                        <strong>Lời dẫn từ Thầy Cường</strong>
+                        <span class="small-text">Đang phát âm thanh...</span>
+                    </div>
+                </div>
+                
+                <div id="quiz-content">
+                    <!-- Quiz generated by JS -->
+                </div>
+
+                <div class="text-center" style="margin-top: 20px;">
+                    <button id="btn-submit-quiz" class="btn" style="width: auto; padding: 15px 40px; font-size: 18px;" onclick="submitQuiz()">NỘP BÀI TẬP</button>
+                </div>
+            </div>
+
+            <!-- PHẦN 7. MÀN HÌNH CỦNG CỐ -->
+            <div id="screen-summary" class="screen">
+                <h2>SƠ ĐỒ TƯ DUY TỔNG KẾT</h2>
+                <div class="audio-player-custom">
+                    <i class="fas fa-volume-up"></i>
+                    <div>
+                        <strong>Lời dẫn từ Thầy Cường</strong>
+                        <span class="small-text">Đang phát âm thanh...</span>
+                    </div>
+                </div>
+                
+                <div class="panel" style="text-align: center;">
+                    <!-- 🔴 CHÈN HÌNH: https://drive.google.com/file/d/1p01rDUoPO3D_GdTULCguMjNwQqf151Fy/view?usp=sharing -->
+                    <!-- Dùng link tải trực tiếp hoặc placeholder nếu lỗi -->
+                    <img src="https://lh3.googleusercontent.com/d/1p01rDUoPO3D_GdTULCguMjNwQqf151Fy" onerror="this.src='https://via.placeholder.com/800x500/1c153d/00e5ff?text=S%C6%A1+%C4%90%E1%BB%93+T%C6%B0+Duy+T%E1%BB%95ng+K%E1%BA%BFt'" class="mindmap-img" alt="Sơ đồ tư duy">
+                </div>
+            </div>
+
+            <!-- PHẦN 8. MÀN HÌNH MỞ RỘNG -->
+            <div id="screen-extend" class="screen">
+                <h2>KIẾN THỨC MỞ RỘNG</h2>
+                <div class="audio-player-custom">
+                    <i class="fas fa-volume-up"></i>
+                    <div>
+                        <strong>Lời dẫn từ Thầy Cường</strong>
+                        <span class="small-text">Đang phát âm thanh...</span>
+                    </div>
+                </div>
+                
+                <div class="extend-block">
+                    <h3>An toàn phản ứng với nước</h3>
+                    <p>Một số kim loại kiềm thổ như Ca, Sr, Ba phản ứng với nước tạo bazơ và khí H₂. Cần thận trọng khi làm thí nghiệm.</p>
+                </div>
+                
+                <div class="extend-block" style="border-left-color: var(--highlight);">
+                    <h3 style="color: var(--highlight);">Tính chất phản ứng với nước</h3>
+                    <p>- Be: không phản ứng với nước.</p>
+                    <p>- Mg: phản ứng yếu với nước nóng.</p>
+                    <p>- Ca, Sr, Ba: phản ứng mạnh với nước ở nhiệt độ thường.</p>
+                    <br>
+                    <p class="text-warning"><i>* Mức độ phản ứng với nước tăng dần theo chiều Be &lt; Mg &lt; Ca &lt; Sr &lt; Ba.</i></p>
+                </div>
+
+                <div class="text-center" style="margin-top: 30px;">
+                    <button id="btn-open-extend" class="btn" style="width: auto; background: linear-gradient(45deg, #6200ea, #b388ff); color: #fff;" onclick="openExtendQuiz()">Làm Bài Thử Thách Mở Rộng</button>
+                </div>
+            </div>
+
+        </div> <!-- End Middle Col -->
+
+        <!-- PHẦN 10. CỘT THÔNG TIN BÊN PHẢI -->
+        <div id="right-col">
+            <div class="panel" style="flex-grow: 1;">
+                <h3 class="menu-title">THÔNG TIN</h3>
+                
+                <div class="info-panel">
+                    <div class="info-label">Học sinh</div>
+                    <div class="info-value" id="display-name">---</div>
+                    
+                    <div class="info-label">Lớp</div>
+                    <div class="info-value" id="display-class">---</div>
+                </div>
+
+                <div class="info-panel" style="margin-top: 30px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid var(--border);">
+                    <div class="info-label">ĐIỂM SỐ TỔNG</div>
+                    <div class="total-score-display" id="display-score">0</div>
+                    <div id="rankBadge" class="rankBadge">Cố gắng hơn nhé!</div>
+                </div>
+
+                <div style="margin-top: auto; text-align: center;">
+                    <button id="btn-send-score" class="btn" style="background: linear-gradient(45deg, #00e676, #69f0ae); color: #000;" disabled onclick="sendScoreToTeacher()">GỬI KẾT QUẢ CHO THẦY</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals & Overlays -->
+    
+    <!-- PHẦN 9. MODAL THỬ THÁCH MỞ RỘNG -->
+    <div id="modal-extend" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="document.getElementById('modal-extend').classList.remove('active')">&times;</button>
+            <h2 class="text-center" style="color: #b388ff;">THỬ THÁCH MỞ RỘNG</h2>
+            <div id="extend-quiz-content">
+                <!-- Extend quiz generated by JS -->
+            </div>
+            <div class="text-center" style="margin-top: 20px;">
+                <button class="btn" style="width: auto; background: #6200ea; color: #fff;" onclick="checkExtendQuiz()">Hoàn thành Thử thách</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reward Popup -->
+    <div id="popup-reward" class="modal">
+        <div class="modal-content reward-popup">
+            <button class="close-btn" onclick="document.getElementById('popup-reward').classList.remove('active')">&times;</button>
+            <h2>CHÚC MỪNG!</h2>
+            <!-- 🔴 CHÈN HÌNH: https://share.google/sZCTURsxfjl430xbb (Sử dụng placeholder fallback nếu lỗi) -->
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Barium_under_Argon.jpg/800px-Barium_under_Argon.jpg" onerror="this.src='https://via.placeholder.com/150/ff9100/fff?text=Barium'" alt="Barium">
+            <h3 class="text-warning">TỪ KHÓA: BARIUM</h3>
+            <p>Barium là một kim loại kiềm thổ thuộc nhóm IIA.</p>
+            <p class="text-success" style="font-weight: bold;">Hoàn thành xuất sắc! (+4 Điểm)</p>
+        </div>
+    </div>
+
+    <!-- Score Popup -->
+    <div id="popup-score" class="modal">
+        <div class="modal-content score-popup">
+            <button class="close-btn" onclick="document.getElementById('popup-score').classList.remove('active')">&times;</button>
+            <h2>HOÀN THÀNH BÀI</h2>
+            <p>Điểm phần này của em là:</p>
+            <div class="big-score" id="popup-score-val">10</div>
+            <p id="popup-correct-val" style="font-weight: bold; font-size: 18px;">Số câu đúng: x/5</p>
+            <p class="small-text" style="color: var(--text-muted);">(Điểm đã được cộng dồn vào bảng tổng)</p>
+            <button class="btn" style="width: auto; margin-top: 15px;" onclick="document.getElementById('popup-score').classList.remove('active')">Đóng & Xem đáp án</button>
+        </div>
+    </div>
+
+    <!-- Đoán từ khóa dọc Modal -->
+    <div id="modal-vertical" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <button class="close-btn" onclick="document.getElementById('modal-vertical').classList.remove('active')">&times;</button>
+            <h2 class="text-warning">Thử thách Cuối cùng!</h2>
+            <p>Từ khóa hàng dọc (7 chữ cái) là gì?</p>
+            <input type="text" id="vertical-keyword-input" class="login-input" style="text-transform: uppercase;" placeholder="Nhập từ khóa...">
+            <button class="btn" style="width: auto;" onclick="checkVerticalKeyword()">Trả lời</button>
+        </div>
+    </div>
+
+    <!-- PHẦN 13. AI TRỢ GIẢNG -->
+    <button class="ai-fab" onclick="toggleAiChat()"><i class="fas fa-robot"></i></button>
+    
+    <div id="ai-chat-window" class="ai-chat-window">
+        <div class="ai-header">
+            <span><i class="fas fa-robot"></i> Trợ Giảng Hóa Học AI</span>
+            <button class="close-btn" style="position: static; font-size: 20px; color: #fff;" onclick="toggleAiChat()">&times;</button>
+        </div>
+        <div class="ai-body" id="ai-body">
+            <div class="ai-msg msg-ai">Chào em! Thầy là Trợ giảng AI. Em có câu hỏi nào về Kim loại kiềm thổ hay Hóa học cần Thầy giải đáp không? ✨</div>
+        </div>
+        <div class="ai-footer">
+            <input type="text" id="ai-input" class="ai-input" placeholder="Nhập câu hỏi của em..." onkeypress="if(event.key==='Enter') sendAiMessage()">
+            <button class="ai-send-btn" onclick="sendAiMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="floating-points-container"></div>
+    <div id="fireworks-container"></div>
+
+    <!-- ================== SCRIPT ================== -->
+    <script>
+        // --- BIẾN TOÀN CỤC ---
+        let currentScore = 0;
+        let totalCorrect = 0;
+        const totalQuestionsCount = 17; // 7 (warmup) + 5 (quiz) + 5 (extend)
+        let quizSubmitted = false;
+        let extendQuizSubmitted = false;
+        let studentNameStr = "";
+        let studentClassStr = "";
+        
+// 🔴 CHÈN LINK WEB APP GOOGLE SHEET THEO LỚP:
+const GOOGLE_SHEET_WEBAPP_URLS = {
+    "12A3": "https://script.google.com/macros/s/AKfycbzHmsgnuIYH3aBynN3XhNZYaKUCbRZvRHGP2jf1e5VmWCitoaBpKz-C4vcW2Z-cXg6_Gw/exec",
+    "12A5": "https://script.google.com/macros/s/AKfycbxjuCackz3OTeE0HkklRCTaklLXfxhwjg_OpoD40Pkl_kBJ4IuSwaAZyJ3R9aI5Lb7qCQ/exec"
+};
+
+        // 🔴 CHÈN API KEY GEMINI (Giữ trống như yêu cầu)
+        const apiKey = "";
+        let chatHistory = [];
+
+        // --- ÂM THANH ---
+        const audios = {
+            tingting: document.getElementById('audio-tingting'),
+            sai_roi: document.getElementById('audio-sai_roi'),
+            giong_dung: document.getElementById('audio-giong_dung'),
+            giong_sai: document.getElementById('audio-giong_sai'),
+            intro: document.getElementById('audio-gioi_thieu'),
+            warmup: document.getElementById('audio-khoi_dong'),
+            chot_khoi_dong: document.getElementById('audio-chot_khoi_dong'),
+            lab: document.getElementById('audio-thi_nghiem_ao'),
+            quiz: document.getElementById('audio-luyen_tap'),
+            chot_luyen_tap: document.getElementById('audio-chot_luyen_tap'),
+            summary: document.getElementById('audio-cung_co'),
+            extend: document.getElementById('audio-mo_rong'),
+            bye: document.getElementById('audio-chao_tam_biet')
+        };
+
+        function phatAmThanh(id) {
+            if(audios[id]) {
+                audios[id].currentTime = 0;
+                audios[id].play().catch(e => console.log("Audio play blocked by browser."));
+            }
+        }
+
+        function pauseAllAudio() {
+            Object.values(audios).forEach(a => {
+                if(a) { a.pause(); a.currentTime = 0; }
+            });
+        }
+
+        // --- KHỞI ĐỘNG APP ---
+        function startApp() {
+            const nameInput = document.getElementById('login-name').value.trim();
+            const classInput = document.getElementById('login-class').value.trim();
+
+            if (!nameInput || !classInput) {
+                alert("Em hãy nhập đầy đủ Họ Tên và Lớp nhé!");
+                return;
+            }
+
+            studentNameStr = nameInput;
+            studentClassStr = classInput;
+
+            document.getElementById('display-name').innerText = studentNameStr;
+            document.getElementById('display-class').innerText = studentClassStr;
+            document.getElementById('btn-send-score').disabled = false;
+
+            document.getElementById('login-overlay').style.display = 'none';
+            phatAmThanh('intro');
+        }
+
+        // --- CHUYỂN MÀN HÌNH ---
+        function switchScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            // Remove active from menu
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            
+            // Activate target screen and menu
+            document.getElementById('screen-' + screenId).classList.add('active');
+            const menuBtn = document.getElementById('nav-' + screenId);
+            if(menuBtn) menuBtn.classList.add('active');
+            
+            // Handle Lab specific layout
+            const leftCol = document.getElementById('left-col');
+            const rightCol = document.getElementById('right-col');
+            const labDropdown = document.getElementById('lab-dropdown');
+            
+            if (screenId === 'lab') {
+                leftCol.style.display = 'none';
+                rightCol.style.display = 'none';
+                document.getElementById('lab-instruction').style.display = 'block';
+            } else {
+                leftCol.style.display = 'flex';
+                rightCol.style.display = 'flex';
+                labDropdown.classList.remove('show');
+            }
+
+            // Audio logic
+            pauseAllAudio();
+            if(audios[screenId]) phatAmThanh(screenId);
+        }
+
+        function toggleLabMenu() {
+            document.getElementById('lab-dropdown').classList.toggle('show');
+        }
+
+        function closeInstruction() {
+            document.getElementById('lab-instruction').style.display = 'none';
+            if(audios['lab']) { audios['lab'].pause(); audios['lab'].currentTime = 0; }
+        }
+
+        // --- HỆ THỐNG ĐIỂM ---
+        function addScore(points) {
+            currentScore += points;
+            const scoreDisplay = document.getElementById('display-score');
+            scoreDisplay.innerText = currentScore;
+            scoreDisplay.classList.remove('pulseScore');
+            void scoreDisplay.offsetWidth; // trigger reflow
+            scoreDisplay.classList.add('pulseScore');
+
+            updateBadge();
+        }
+
+        function updateBadge() {
+            const badge = document.getElementById('rankBadge');
+            if (currentScore >= 12) {
+                badge.innerText = "NHÀ HÓA HỌC TÀI BA";
+                badge.style.borderColor = "#ff1744";
+                badge.style.color = "#ff1744";
+                badge.style.fontWeight = "bold";
+            } else if (currentScore >= 6) {
+                badge.innerText = "HỌC SINH GIỎI";
+                badge.style.borderColor = "#00e676";
+                badge.style.color = "#00e676";
+            } else {
+                badge.innerText = "Cố gắng hơn nhé!";
+                badge.style.borderColor = "var(--border)";
+                badge.style.color = "var(--text)";
+            }
+        }
+
+        function showFloatingPoints(points, text = "Điểm") {
+            const container = document.getElementById('floating-points-container');
+            const el = document.createElement('div');
+            el.className = 'floating-point';
+            el.innerHTML = `+${points} ${text} ⭐`;
+            el.style.left = '50%';
+            el.style.top = '50%';
+            el.style.transform = 'translate(-50%, -50%)';
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        }
+
+        function fireworksEffect() {
+            const container = document.getElementById('fireworks-container');
+            const colors = ['#ff0', '#0f0', '#0ff', '#f0f', '#fff'];
+            for(let i=0; i<30; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                p.style.left = '50%';
+                p.style.top = '50%';
+                
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 50 + Math.random() * 100;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                
+                container.appendChild(p);
+                
+                let start = performance.now();
+                requestAnimationFrame(function animate(time) {
+                    let dt = (time - start) / 1000;
+                    if(dt > 1) { p.remove(); return; }
+                    p.style.transform = `translate(${vx * dt}px, ${vy * dt + 50 * dt * dt}px)`;
+                    p.style.opacity = 1 - dt;
+                    requestAnimationFrame(animate);
+                });
+            }
+        }
+
+        // --- Ô CHỮ (CROSSWORD) ---
+        const cwData = [
+    { word: "BERYLLIUM", hint: "Trong nhóm IIA có một kim loại không phản ứng với nước ở bất kì nhiệt độ nào, kim loại đó là?", keyIndex: 0 }, // B
+    { word: "CALCIUM", hint: "Nguyên tố phổ biến nhất trong nhóm IIA, là thành phần chính cấu tạo nên vỏ trứng, san hô và hệ xương của con người?", keyIndex: 1 }, // A
+    { word: "STRONTIUM", hint: "Nguyên tố nhóm II có kí hiệu hóa học là Sr. Tên của nguyên tố này là?", keyIndex: 2 }, // R
+    { word: "CATION", hint: "Các nguyên tử nhóm IIA có xu hướng nhường 2 electron để trở thành hạt mang điện dương gọi là gì?", keyIndex: 3 }, // I (ô thứ 4)
+    { word: "SODIUM", hint: "Tên của nguyên tố có kí hiệu hóa học Na là gì?", keyIndex: 4 }, // U (ô thứ 5)
+    { word: "MEM", hint: "Kim loại kiềm thổ có thể dùng dao để cắt được, chứng tỏ kim loại kiềm thổ rất _____.", keyIndex: 0 } // M (ô thứ 1)
+];
+      
+        let activeRowIndex = -1;
+        let rowsSolved = 0;
+        let keywordSolved = false;
+
+        function renderCrossword() {
+            const board = document.getElementById('crossword-board');
+            board.innerHTML = '';
+            
+            // Tính toán khoảng lùi để cột từ khóa thẳng hàng
+            const targetKeyCol = 5; // Cột index 5 sẽ là cột từ khóa
+
+            cwData.forEach((item, index) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'cw-row';
+                
+                const btn = document.createElement('div');
+                btn.className = 'row-num-btn';
+                btn.id = `cw-btn-${index}`;
+                btn.innerText = index + 1;
+                btn.onclick = () => activateRow(index);
+                rowDiv.appendChild(btn);
+
+                const cellsDiv = document.createElement('div');
+                cellsDiv.className = 'cw-cells';
+                
+                // Shift to align keys
+                const shift = targetKeyCol - item.keyIndex;
+                if(shift > 0) {
+                    cellsDiv.style.marginLeft = (shift * 42) + 'px'; // 40px cell + 2px gap
+                }
+
+                for(let i=0; i<item.word.length; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cw-cell';
+                    if (i === item.keyIndex) cell.classList.add('key-col');
+                    cell.id = `cw-cell-${index}-${i}`;
+                    cellsDiv.appendChild(cell);
+                }
+                rowDiv.appendChild(cellsDiv);
+                board.appendChild(rowDiv);
+            });
+        }
+
+        function activateRow(index) {
+            if (document.getElementById(`cw-btn-${index}`).classList.contains('done')) return;
+            activeRowIndex = index;
+            document.getElementById('cw-input-area').style.display = 'block';
+            document.getElementById('cw-hint').innerText = `Hàng ${index + 1}: ${cwData[index].hint}`;
+            const input = document.getElementById('cw-answer-input');
+            input.value = '';
+            input.focus();
+        }
+
+        function normalizeString(str) {
+            return str.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/Đ/g, "D").trim();
+        }
+
+        function checkRow() {
+            if (activeRowIndex === -1) return;
+            const inputVal = document.getElementById('cw-answer-input').value;
+            const ans = normalizeString(inputVal);
+            const correct = normalizeString(cwData[activeRowIndex].word);
+
+            if (ans === correct) {
+                // Đúng
+                for(let i=0; i<cwData[activeRowIndex].word.length; i++) {
+                    const cell = document.getElementById(`cw-cell-${activeRowIndex}-${i}`);
+                    cell.innerText = cwData[activeRowIndex].word[i];
+                    cell.classList.add('solved');
+                    if (i === cwData[activeRowIndex].keyIndex) cell.classList.add('key-solved');
+                }
+                document.getElementById(`cw-btn-${activeRowIndex}`).classList.add('done');
+                document.getElementById('cw-input-area').style.display = 'none';
+                
+                addScore(1);
+                totalCorrect += 1;
+                showFloatingPoints(1);
+                phatAmThanh('tingting');
+                phatAmThanh('giong_dung');
+
+                // Feedback
+                const hintEl = document.getElementById('cw-hint');
+                hintEl.innerHTML = `<span class="text-success">Tuyệt vời! Đáp án đúng. (+1 Điểm)</span>`;
+                document.getElementById('cw-input-area').style.display = 'block';
+                setTimeout(()=> document.getElementById('cw-input-area').style.display = 'none', 2000);
+
+                rowsSolved++;
+                if (rowsSolved === cwData.length) {
+                    setTimeout(() => {
+                        document.getElementById('keyword-guess-area').style.display = 'block';
+                    }, 1500);
+                }
+            } else {
+                // Sai
+                phatAmThanh('sai_roi');
+                phatAmThanh('giong_sai');
+                document.getElementById('cw-hint').innerHTML += `<br><span class="text-danger">Sai rồi em nhé! Cố lên.</span>`;
+            }
+        }
+
+        function showVerticalInput() {
+            document.getElementById('modal-vertical').classList.add('active');
+        }
+
+        function checkVerticalKeyword() {
+            const input = document.getElementById('vertical-keyword-input').value;
+            if (normalizeString(input) === "BARIUM") {
+                document.getElementById('modal-vertical').classList.remove('active');
+                document.getElementById('keyword-guess-area').style.display = 'none';
+                
+                const reveal = document.getElementById('keyword-reveal');
+                reveal.style.display = 'block';
+                reveal.innerHTML = `TỪ KHÓA: BARIUM<br><span class="text-success" style="font-size: 16px; letter-spacing: 0;">Hoàn thành xuất sắc! (+4 Điểm)</span>`;
+                
+                addScore(4);
+                totalCorrect += 1;
+                showFloatingPoints(4);
+                phatAmThanh('tingting');
+                phatAmThanh('chot_khoi_dong');
+                
+                document.getElementById('popup-reward').classList.add('active');
+                fireworksEffect();
+                keywordSolved = true;
+            } else {
+                phatAmThanh('sai_roi');
+                alert("Tiếc quá, chưa phải. Gợi ý: Tên một nguyên tố kim loại kiềm thổ.");
+            }
+        }
+
+
+        // --- LUYỆN TẬP (QUIZ) ---
+        const quizData = [
+            { type: 'fill_blank', text: "Kim loại Ca tác dụng với nước tạo dung dịch _____________ và khí H₂.", correct: "Ca(OH)2" },
+            { type: 'drag_drop', text: "Kim loại kiềm thổ phản ứng mạnh với nước ở nhiệt độ thường là _____________", options: ['Be', 'Mg', 'Ca'], correct: "Ca" },
+            { type: 'situation', text: "Kim loại nào sau đây không phản ứng với nước ở nhiệt độ thường?", options: ['Ca', 'Ba', 'Mg', 'Sr'], correctIndex: 2 },
+            { type: 'sort', text: "Cho các kim loại kiềm thổ sau: Be, Mg, Ca, Ba. Hãy sắp xếp theo mức độ phản ứng với nước tăng dần.", options: ['Ca', 'Be', 'Ba', 'Mg'], correct: "Be,Mg,Ca,Ba" },
+            { type: 'true_false', text: "ĐÚNG/SAI: Magnesium phản ứng mạnh với nước ở nhiệt độ thường.", correct: false }
+        ];
+
+        let userAnswers = {};
+        let dragSrcEl = null;
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-content');
+            container.innerHTML = '';
+
+            quizData.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = 'quiz-card';
+                card.id = `q-card-${index}`;
+                
+                let html = `<h3>Câu ${index + 1}: ${q.text.replace('_____________','<span id="dropzone-'+index+'" class="drop-zone" ondrop="dropSingle(event, '+index+')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></span>')}</h3>`;
+                
+                if (q.type === 'fill_blank') {
+                    html = `<h3>Câu ${index + 1}: Kim loại Ca tác dụng với nước tạo dung dịch <input type="text" class="fill-blank-input" id="q-input-${index}" onchange="saveAnswer(${index}, this.value)"> và khí H₂.</h3>`;
+                } 
+                else if (q.type === 'drag_drop') {
+                    let itemsHtml = q.options.map(opt => `<div class="draggable-item" draggable="true" ondragstart="dragStart(event, '${opt}')" ondragend="dragEnd(event)" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event, ${index}, '${opt}')">${opt}</div>`).join('');
+                    html += `<div class="drag-items-container" id="drag-container-${index}">${itemsHtml}</div>`;
+                }
+                else if (q.type === 'situation') {
+                    let optsHtml = q.options.map((opt, i) => `<div class="option-row" id="opt-${index}-${i}" onclick="selectMultiChoice(${index}, ${i}, '${opt}')">${opt}</div>`).join('');
+                    html += `<div>${optsHtml}</div>`;
+                }
+                else if (q.type === 'sort') {
+                    let sortHtml = q.options.map((opt, i) => `<div class="sortable-item" draggable="true" data-val="${opt}" ondragstart="dragSortStart(event)" ondragover="dragSortOver(event)" ondrop="dropSort(event)" ontouchstart="handleTouchStartSort(event)" ontouchmove="handleTouchMoveSort(event)" ontouchend="handleTouchEndSort(event)"><i class="fas fa-grip-lines"></i> ${opt}</div>`).join('');
+                    html += `<div class="sort-container" id="sort-container-${index}">${sortHtml}</div>`;
+                    userAnswers[index] = q.options.join(','); // default
+                }
+                else if (q.type === 'true_false') {
+                    html += `<div class="tf-container">
+                        <div class="tf-btn" id="tf-${index}-true" onclick="selectTF(${index}, true)">ĐÚNG</div>
+                        <div class="tf-btn" id="tf-${index}-false" onclick="selectTF(${index}, false)">SAI</div>
+                    </div>`;
+                }
+
+                html += `<div id="feedback-${index}" class="feedback-msg"></div>`;
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+        }
+
+        function saveAnswer(qIndex, val) { userAnswers[qIndex] = val; }
+        
+        function selectMultiChoice(qIndex, optIndex, val) {
+            if(quizSubmitted) return;
+            const opts = document.querySelectorAll(`#q-card-${qIndex} .option-row`);
+            opts.forEach(o => o.classList.remove('selected'));
+            document.getElementById(`opt-${qIndex}-${optIndex}`).classList.add('selected');
+            userAnswers[qIndex] = val;
+        }
+
+        function selectTF(qIndex, val) {
+            if(quizSubmitted) return;
+            document.getElementById(`tf-${qIndex}-true`).classList.remove('selected');
+            document.getElementById(`tf-${qIndex}-false`).classList.remove('selected');
+            document.getElementById(`tf-${qIndex}-${val}`).classList.add('selected');
+            userAnswers[qIndex] = val;
+        }
+
+        // --- Drag Drop Logic ---
+        function dragStart(e, val) { e.dataTransfer.setData('text/plain', val); dragSrcEl = e.target; setTimeout(()=>e.target.style.opacity='0.5',0); }
+        function dragEnd(e) { e.target.style.opacity='1'; }
+        function allowDrop(e) { e.preventDefault(); e.target.classList.add('drag-over'); }
+        function dragLeave(e) { e.target.classList.remove('drag-over'); }
+        function dropSingle(e, qIndex) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            const data = e.dataTransfer.getData('text/plain');
+            e.target.innerText = data;
+            userAnswers[qIndex] = data;
+            if(dragSrcEl) dragSrcEl.style.display = 'none';
+        }
+
+        // --- Touch Logic Drag Drop ---
+        let touchEl = null; let touchOrigX, touchOrigY;
+        function handleTouchStart(e) {
+            if(quizSubmitted) return;
+            touchEl = e.target;
+            const touch = e.touches[0];
+            touchOrigX = touch.clientX; touchOrigY = touch.clientY;
+            touchEl.style.position = 'fixed';
+            touchEl.style.left = touchOrigX - touchEl.offsetWidth/2 + 'px';
+            touchEl.style.top = touchOrigY - touchEl.offsetHeight/2 + 'px';
+            touchEl.style.zIndex = 1000;
+        }
+        function handleTouchMove(e) {
+            if(!touchEl) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchEl.style.left = touch.clientX - touchEl.offsetWidth/2 + 'px';
+            touchEl.style.top = touch.clientY - touchEl.offsetHeight/2 + 'px';
+        }
+        function handleTouchEnd(e, qIndex, val) {
+            if(!touchEl) return;
+            const touch = e.changedTouches[0];
+            touchEl.style.position = 'static';
+            touchEl.style.zIndex = '100';
+            
+            // Tìm phần tử nằm dưới ngón tay
+            touchEl.style.display = 'none'; // tạm ẩn để tìm phía dưới
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            touchEl.style.display = 'block';
+
+            if(target && target.classList.contains('drop-zone')) {
+                target.innerText = val;
+                userAnswers[qIndex] = val;
+                touchEl.style.display = 'none';
+            }
+            touchEl = null;
+        }
+
+        // --- Sort Logic ---
+        function dragSortStart(e) { dragSrcEl = e.target; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/html', e.target.innerHTML); e.target.classList.add('dragging'); }
+        function dragSortOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
+        function dropSort(e) {
+            e.preventDefault();
+            dragSrcEl.classList.remove('dragging');
+            if(dragSrcEl !== e.target && e.target.classList.contains('sortable-item')) {
+                const parent = e.target.parentNode;
+                const siblings = [...parent.querySelectorAll('.sortable-item')];
+                const fromIndex = siblings.indexOf(dragSrcEl);
+                const toIndex = siblings.indexOf(e.target);
+                if(fromIndex < toIndex) { e.target.after(dragSrcEl); } else { e.target.before(dragSrcEl); }
+                updateSortAnswer(parent.id.split('-')[2]);
+            }
+        }
+        function updateSortAnswer(qIndex) {
+            const container = document.getElementById(`sort-container-${qIndex}`);
+            const items = [...container.querySelectorAll('.sortable-item')];
+            userAnswers[qIndex] = items.map(el => el.getAttribute('data-val')).join(',');
+        }
+
+        // --- Touch Logic Sort ---
+        let sortTouchEl = null; let sortTouchOrigY = 0; let sortPlaceholder = null;
+        function handleTouchStartSort(e) {
+            if(quizSubmitted) return;
+            sortTouchEl = e.target.closest('.sortable-item');
+            sortTouchOrigY = e.touches[0].clientY;
+            sortTouchEl.classList.add('dragging');
+        }
+        function handleTouchMoveSort(e) {
+            if(!sortTouchEl) return;
+            e.preventDefault();
+            const touchY = e.touches[0].clientY;
+            const parent = sortTouchEl.parentNode;
+            const siblings = [...parent.querySelectorAll('.sortable-item:not(.dragging)')];
+            const nextSibling = siblings.find(sib => touchY <= sib.getBoundingClientRect().top + sib.offsetHeight / 2);
+            if (nextSibling) { parent.insertBefore(sortTouchEl, nextSibling); } 
+            else { parent.appendChild(sortTouchEl); }
+        }
+        function handleTouchEndSort(e) {
+            if(!sortTouchEl) return;
+            sortTouchEl.classList.remove('dragging');
+            updateSortAnswer(sortTouchEl.parentNode.id.split('-')[2]);
+            sortTouchEl = null;
+        }
+
+        function getCorrectText(q) {
+            if (q.type === 'fill_blank' || q.type === 'drag_drop') return q.correct;
+            if (q.type === 'situation') return q.options[q.correctIndex];
+            if (q.type === 'sort') return q.correct.replace(/,/g, ' ➔ ');
+            if (q.type === 'true_false') return q.correct ? "ĐÚNG" : "SAI";
+            return "";
+        }
+
+        function submitQuiz() {
+            if(quizSubmitted) return;
+            
+            let correctCount = 0;
+            let earnedPoints = 0;
+
+            quizData.forEach((q, index) => {
+                let isCorrect = false;
+                const userAns = userAnswers[index];
+                
+                if(q.type === 'fill_blank') {
+                    const cleanAns = userAns ? normalizeString(userAns).replace(/[\(\)]/g, '') : "";
+                    const cleanCorrect = normalizeString(q.correct).replace(/[\(\)]/g, '');
+                    isCorrect = (cleanAns === cleanCorrect) || (userAns && userAns.replace(/\s/g,'').toLowerCase() === "ca(oh)2");
+                } 
+                else if (q.type === 'situation') {
+                    isCorrect = userAns === q.options[q.correctIndex];
+                }
+                else {
+                    isCorrect = String(userAns) === String(q.correct);
+                }
+
+                const fb = document.getElementById(`feedback-${index}`);
+                if(isCorrect) {
+                    correctCount++;
+                    earnedPoints += 2;
+                    fb.innerHTML = `Chính xác! (+2 điểm)`;
+                    fb.className = 'feedback-msg correct';
+                } else {
+                    fb.innerHTML = `Sai rồi! Đáp án: ${getCorrectText(q)}`;
+                    fb.className = 'feedback-msg incorrect';
+                }
+            });
+
+            totalCorrect += correctCount;
+            addScore(earnedPoints);
+            quizSubmitted = true;
+
+            // Update UI
+            const btn = document.getElementById('btn-submit-quiz');
+            btn.innerText = `Đã nộp! Tích lũy: +${earnedPoints} Điểm`;
+            btn.disabled = true;
+            btn.style.background = '#555';
+            btn.style.color = '#fff';
+
+            // Show Popup
+            document.getElementById('popup-score-val').innerText = earnedPoints;
+            document.getElementById('popup-correct-val').innerText = `Số câu đúng: ${correctCount}/5`;
+            document.getElementById('popup-score').classList.add('active');
+
+            if(earnedPoints > 0) fireworksEffect();
+            phatAmThanh('chot_luyen_tap');
+        }
+
+
+        // --- MỞ RỘNG (EXTENSION) ---
+        const extendQuizData = [
+            { q: "Kim loại nào sau đây không phản ứng với nước ở bất kì nhiệt độ nào?", opts: ['Mg', 'Ca', 'Be', 'Ba'], ans: 2 },
+            { q: "Kim loại kiềm thổ nào sau đây chỉ phản ứng yếu với nước khi đun nóng?", opts: ['Be', 'Mg', 'Sr', 'Ba'], ans: 1 },
+            { q: "Kim loại nào sau đây phản ứng mạnh với nước ngay ở nhiệt độ thường?", opts: ['Be, Mg', 'Mg, Ca', 'Ca, Sr, Ba', 'Be, Ba'], ans: 2 },
+            { q: "Sản phẩm của phản ứng giữa Ca và nước là:", opts: ['CaO và H₂', 'Ca(OH)₂ và H₂', 'CaH₂ và O₂', 'CaO và O₂'], ans: 1 },
+            { q: "Phát biểu nào sau đây đúng về kim loại kiềm thổ?", opts: ['Có tính khử yếu hơn kim loại kiềm', 'Có tính oxi hóa mạnh', 'Có tính khử mạnh, chỉ yếu hơn kim loại kiềm', 'Không phản ứng với nước'], ans: 2 }
+        ];
+        let extendQuizAnswers = {};
+
+        function openExtendQuiz() {
+            const container = document.getElementById('extend-quiz-content');
+            container.innerHTML = '';
+            
+            extendQuizData.forEach((item, qIndex) => {
+                let html = `<div style="margin-bottom: 20px;">
+                    <p><strong>Câu ${qIndex+1}:</strong> ${item.q}</p>
+                    <div style="margin-top: 10px;">`;
+                
+                item.opts.forEach((opt, oIndex) => {
+                    html += `<div class="option-row" id="ext-opt-${qIndex}-${oIndex}" onclick="selectExtendOption(${qIndex}, ${oIndex})">${opt}</div>`;
+                });
+                html += `</div></div>`;
+                container.innerHTML += html;
+            });
+
+            document.getElementById('modal-extend').classList.add('active');
+        }
+
+        function selectExtendOption(qIndex, oIndex) {
+            if(extendQuizSubmitted) return;
+            const opts = document.querySelectorAll(`#extend-quiz-content [id^="ext-opt-${qIndex}-"]`);
+            opts.forEach(o => o.classList.remove('selected'));
+            document.getElementById(`ext-opt-${qIndex}-${oIndex}`).classList.add('selected');
+            extendQuizAnswers[qIndex] = oIndex;
+        }
+
+        function checkExtendQuiz() {
+            if(extendQuizSubmitted) { document.getElementById('modal-extend').classList.remove('active'); return; }
+            
+            if(Object.keys(extendQuizAnswers).length < 5) {
+                alert("Hoàn thành cả 5 câu nhé!");
+                return;
+            }
+
+            let correctCount = 0;
+            let earned = 0;
+            extendQuizData.forEach((item, idx) => {
+                if(extendQuizAnswers[idx] === item.ans) {
+                    correctCount++;
+                    earned += 2;
+                }
+            });
+
+            totalCorrect += correctCount;
+            addScore(earned);
+            extendQuizSubmitted = true;
+            
+            if(earned > 0) {
+                showFloatingPoints(earned);
+                fireworksEffect();
+            }
+
+            document.getElementById('modal-extend').classList.remove('active');
+            
+            const btn = document.getElementById('btn-open-extend');
+            btn.innerText = `Đã hoàn thành! (+${earned} Điểm)`;
+            btn.disabled = true;
+            btn.style.background = '#555';
+            
+            setTimeout(() => { phatAmThanh('bye'); }, 300);
+        }
+
+        // --- GỬI ĐIỂM GOOGLE SHEET ---
+function sendScoreToTeacher() {
+    if(!studentNameStr || !studentClassStr) {
+        alert("Lỗi thông tin học sinh!");
+        return;
+    }
+
+    const lopChuanHoa = studentClassStr.trim().toUpperCase();
+    const sheetUrl = GOOGLE_SHEET_WEBAPP_URLS[lopChuanHoa];
+
+    if(!sheetUrl) {
+        alert("Lớp này chưa được cấu hình sheet lưu điểm!");
+        return;
+    }
+
+    const btn = document.getElementById('btn-send-score');
+    btn.innerText = "Đang gửi...";
+    btn.disabled = true;
+
+    const payload = {
+        hoTen: studentNameStr,
+        lop: lopChuanHoa,
+        diem: currentScore,
+        soCauDung: totalCorrect,
+        tongSoCau: totalQuestionsCount
+    };
+
+    fetch(sheetUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    })
+    .then(() => {
+        alert("Đã gửi kết quả thành công cho cô!");
+        btn.innerText = "ĐÃ GỬI KẾT QUẢ";
+        btn.disabled = true;
+        btn.style.background = "#555";
+    })
+    .catch(() => {
+        alert("Gửi kết quả thất bại. Em hãy thử lại!");
+        btn.innerText = "GỬI KẾT QUẢ CHO CÔ";
+        btn.disabled = false;
+    });
+}
+        // --- AI TRỢ GIẢNG GEMINI ---
+        function toggleAiChat() {
+            const w = document.getElementById('ai-chat-window');
+            w.classList.toggle('active');
+            if(w.classList.contains('active')) document.getElementById('ai-input').focus();
+        }
+
+        async function fetchWithRetry(url, options, retries = 5, delays = [1000, 2000, 4000, 8000, 16000]) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return await response.json();
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                    await new Promise(r => setTimeout(r, delays[i]));
+                }
+            }
+        }
+
+        async function sendAiMessage() {
+            const inputEl = document.getElementById('ai-input');
+            const msg = inputEl.value.trim();
+            if(!msg) return;
+
+            const bodyEl = document.getElementById('ai-body');
+            
+            // Add User msg
+            bodyEl.innerHTML += `<div class="ai-msg msg-user">${msg}</div>`;
+            inputEl.value = '';
+            bodyEl.scrollTop = bodyEl.scrollHeight;
+
+            // Loading msg
+            const loadingId = 'ai-load-' + Date.now();
+            bodyEl.innerHTML += `<div id="${loadingId}" class="ai-msg msg-ai dots">Đang suy nghĩ</div>`;
+            bodyEl.scrollTop = bodyEl.scrollHeight;
+
+            chatHistory.push({ role: "user", parts: [{ text: msg }] });
+
+            if(!apiKey) {
+                document.getElementById(loadingId).remove();
+                bodyEl.innerHTML += `<div class="ai-msg msg-ai">Thầy xin lỗi, hệ thống đang bận một chút, em thử lại sau nhé! (Thiếu API Key)</div>`;
+                return;
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                systemInstruction: {
+                    parts: [{ text: "Bạn là Trợ giảng AI thân thiện, vui tính, trợ lý của Thầy Cường. Nhiệm vụ của bạn là giải đáp các thắc mắc của học sinh cấp 3 về môn Hóa Học, đặc biệt là bài Kim loại kiềm thổ. Luôn dùng ngôn ngữ dễ hiểu, có chèn emoji. Nếu học sinh hỏi ngoài phạm vi Hóa học, hãy khéo léo từ chối và hướng các em quay lại bài học." }]
+                },
+                contents: chatHistory
+            };
+
+            try {
+                const data = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                document.getElementById(loadingId).remove();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if(!aiText) throw new Error("Empty response");
+
+                chatHistory.push({ role: "model", parts: [{ text: aiText }] });
+                bodyEl.innerHTML += `<div class="ai-msg msg-ai">${aiText.replace(/\n/g, '<br>')}</div>`;
+
+            } catch(e) {
+                document.getElementById(loadingId).remove();
+                bodyEl.innerHTML += `<div class="ai-msg msg-ai text-danger">Xin lỗi em, kết nối đang bị gián đoạn. Hãy kiểm tra mạng và thử lại nhé.</div>`;
+            }
+            bodyEl.scrollTop = bodyEl.scrollHeight;
+        }
+
+        // --- KHỞI TẠO DỮ LIỆU ---
+        renderCrossword();
+        renderQuiz();
+
+    </script>
+</body>
+</html>
